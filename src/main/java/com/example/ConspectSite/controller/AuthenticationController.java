@@ -1,75 +1,45 @@
-package com.example.ConspectSite.controller;
+package com.devglan.controller;
 
-import com.example.ConspectSite.model.UserTokenState;
-import com.example.ConspectSite.security.TokenHelper;
-import com.example.ConspectSite.service.impl.CustomUserDetailsService;
+import com.devglan.config.JwtTokenUtil;
+import com.devglan.model.AuthToken;
+import com.devglan.model.LoginUser;
+import com.devglan.model.User;
+import com.devglan.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.Map;
-
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping("/token")
 public class AuthenticationController {
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    TokenHelper tokenHelper;
+    private UserService userService;
 
-    @Value("${jwt.expires_in}")
-    private int EXPIRES_IN;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
-    @Value("${jwt.cookie}")
-    private String TOKEN_COOKIE;
+    @RequestMapping(value = "/generate-token", method = RequestMethod.POST)
+    public ResponseEntity<?> register(@RequestBody LoginUser loginUser) throws AuthenticationException {
 
-    @RequestMapping(value = "/refresh", method = RequestMethod.GET)
-    public ResponseEntity<?> refreshAuthenticationToken(HttpServletRequest request, HttpServletResponse response) {
-
-        String authToken = tokenHelper.getToken(request);
-        if (authToken != null && tokenHelper.canTokenBeRefreshed(authToken)) {
-            // TODO check user password last update
-            String refreshedToken = tokenHelper.refreshToken(authToken);
-
-            Cookie authCookie = new Cookie(TOKEN_COOKIE, (refreshedToken));
-            authCookie.setPath("/");
-            authCookie.setHttpOnly(true);
-            authCookie.setMaxAge(EXPIRES_IN);
-            // Add cookie to response
-            response.addCookie(authCookie);
-
-            UserTokenState userTokenState = new UserTokenState(refreshedToken, EXPIRES_IN);
-            return ResponseEntity.ok(userTokenState);
-        } else {
-            UserTokenState userTokenState = new UserTokenState();
-            return ResponseEntity.accepted().body(userTokenState);
-        }
+        final Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginUser.getUsername(),
+                        loginUser.getPassword()
+                )
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        final User user = userService.findOne(loginUser.getUsername());
+        final String token = jwtTokenUtil.generateToken(user);
+        return ResponseEntity.ok(new AuthToken(token));
     }
-
-    @RequestMapping(value = "/changePassword", method = RequestMethod.POST)
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> changePassword(@RequestBody PasswordChanger passwordChanger) {
-        userDetailsService.changePassword(passwordChanger.oldPassword, passwordChanger.newPassword);
-        Map<String, String> result = new HashMap<>();
-        result.put("result", "success");
-        return ResponseEntity.accepted().body(result);
-    }
-
-    static class PasswordChanger {
-        public String oldPassword;
-        public String newPassword;
-    }
-
 }

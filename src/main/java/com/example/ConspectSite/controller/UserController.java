@@ -1,79 +1,62 @@
-package com.example.ConspectSite.controller;
+package com.devglan.controller;
 
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.example.ConspectSite.exception.ResourceConflictException;
-import com.example.ConspectSite.model.User;
-import com.example.ConspectSite.model.UserRequest;
-import com.example.ConspectSite.service.UserService;
+import com.devglan.model.User;
+import com.devglan.model.UserDto;
+import com.devglan.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.bind.annotation.*;
+import org.json.JSONObject;
 
+import java.util.List;
+
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-
-    @RequestMapping(method = GET, value = "/user/{userId}")
-    public User loadById(@PathVariable Long userId) {
-        return this.userService.findById(userId);
+    @RequestMapping(value="/users", method = RequestMethod.GET)
+    /*@PreAuthorize("hasRole('ROLE_ADMIN')")*/
+    public List<User> listUser(){
+        System.out.println(SecurityContextHolder.getContext());
+        return userService.findAll();
     }
 
-    @RequestMapping(method = GET, value = "/user/all")
-    public List<User> loadAll() {
-        return this.userService.findAll();
+    @RequestMapping(value = "/users/{id}", method = RequestMethod.GET)
+    public User getOne(@PathVariable(value = "id") Long id){
+        return userService.findById(id);
     }
 
-    @RequestMapping(method = GET, value = "/user/reset-credentials")
-    public ResponseEntity<Map> resetCredentials() {
-        this.userService.resetCredentials();
-        Map<String, String> result = new HashMap<>();
-        result.put("result", "success");
-        return ResponseEntity.accepted().body(result);
+    @RequestMapping(value="/signup", method = RequestMethod.POST)
+    public User saveUser(@RequestBody UserDto user){
+        return userService.save(user);
     }
 
-
-    @RequestMapping(method = POST, value = "/signup")
-    public ResponseEntity<?> addUser(@RequestBody UserRequest userRequest,
-                                     UriComponentsBuilder ucBuilder) {
-
-        User existUser = this.userService.findByUsername(userRequest.getUsername());
-        if (existUser != null) {
-            throw new ResourceConflictException(userRequest.getId(), "Username already exists");
-        }
-        User user = this.userService.save(userRequest);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(ucBuilder.path("/api/user/{userId}").buildAndExpand(user.getId()).toUri());
-        return new ResponseEntity<User>(user, HttpStatus.CREATED);
+    @RequestMapping(value = "/api/public", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public String publicEndpoint() {
+        return new JSONObject()
+                .put("message", "All good. You DO NOT need to be authenticated to call /api/public.")
+                .toString();
     }
 
-    /*
-     * We are not using userService.findByUsername here(we could), so it is good that we are making
-     * sure that the user has role "ROLE_USER" to access this endpoint.
-     */
-    @RequestMapping("/whoami")
-    // @PreAuthorize("hasRole('USER')")
-    public User user() {
-        System.out.println("!!@@!!"+(User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @RequestMapping(value = "/api/private", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public String privateEndpoint() {
+        return new JSONObject()
+                .put("message", "All good. You can see this because you are Authenticated.")
+                .toString();
+    }
+
+    @RequestMapping(value = "/api/private-scoped", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public String privateScopedEndpoint() {
+        return new JSONObject()
+                .put("message", "All good. You can see this because you are Authenticated with a Token granted the 'read:messages' scope")
+                .toString();
     }
 
 }

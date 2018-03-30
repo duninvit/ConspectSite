@@ -1,9 +1,10 @@
-package com.example.ConspectSite.repository;
+package com.devglan.dao;
 
-import com.example.ConspectSite.model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.devglan.model.User;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+@Repository
+public interface UserDao extends CrudRepository<User, Long> {
     User findByUsername(String username);
 }
-

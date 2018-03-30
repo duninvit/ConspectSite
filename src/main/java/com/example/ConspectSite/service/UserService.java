@@ -1,18 +1,16 @@
-package com.example.ConspectSite.service;
+package com.devglan.service;
+
+import com.devglan.model.User;
+import com.devglan.model.UserDto;
 
 import java.util.List;
 
-import com.example.ConspectSite.model.User;
-import com.example.ConspectSite.model.UserRequest;
-
 public interface UserService {
-    void resetCredentials();
+
+    User save(UserDto user);
+    List<User> findAll();
+    void delete(long id);
+    User findOne(String username);
 
     User findById(Long id);
-
-    User findByUsername(String username);
-
-    List<User> findAll();
-
-    User save(UserRequest user);
 }
