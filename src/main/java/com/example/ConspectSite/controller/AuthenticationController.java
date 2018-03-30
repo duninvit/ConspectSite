@@ -1,10 +1,10 @@
-package com.devglan.controller;
+package com.example.ConspectSite.controller;
 
-import com.devglan.config.JwtTokenUtil;
-import com.devglan.model.AuthToken;
-import com.devglan.model.LoginUser;
-import com.devglan.model.User;
-import com.devglan.service.UserService;
+import com.example.ConspectSite.model.AuthToken;
+import com.example.ConspectSite.model.LoginUser;
+import com.example.ConspectSite.model.User;
+import com.example.ConspectSite.security.JwtTokenUtil;
+import com.example.ConspectSite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;

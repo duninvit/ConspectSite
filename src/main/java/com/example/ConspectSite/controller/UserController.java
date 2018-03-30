@@ -1,8 +1,8 @@
-package com.devglan.controller;
+package com.example.ConspectSite.controller;
 
-import com.devglan.model.User;
-import com.devglan.model.UserDto;
-import com.devglan.service.UserService;
+import com.example.ConspectSite.model.User;
+import com.example.ConspectSite.model.UserDto;
+import com.example.ConspectSite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;

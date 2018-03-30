@@ -1,4 +1,4 @@
-package com.devglan.model;
+package com.example.ConspectSite.model;
 
 public class UserDto {
 

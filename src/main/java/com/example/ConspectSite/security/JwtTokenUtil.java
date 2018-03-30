@@ -1,14 +1,11 @@
-package com.devglan.config;
+package com.example.ConspectSite.security;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.impl.JWTParser;
-import com.devglan.model.Role;
-import com.devglan.model.User;
+import com.example.ConspectSite.model.Role;
+import com.example.ConspectSite.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.jwt.Jwt;
@@ -20,11 +17,10 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.Function;
 
-import static com.devglan.model.Constants.ACCESS_TOKEN_VALIDITY_SECONDS;
-import static com.devglan.model.Constants.SIGNING_KEY;
+import static com.example.ConspectSite.model.Constants.ACCESS_TOKEN_VALIDITY_SECONDS;
+import static com.example.ConspectSite.model.Constants.SIGNING_KEY;
 
 @Component
 public class JwtTokenUtil implements Serializable {

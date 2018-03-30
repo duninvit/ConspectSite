@@ -1,7 +1,7 @@
-package com.devglan.service;
+package com.example.ConspectSite.service;
 
-import com.devglan.model.User;
-import com.devglan.model.UserDto;
+import com.example.ConspectSite.model.User;
+import com.example.ConspectSite.model.UserDto;
 
 import java.util.List;
 

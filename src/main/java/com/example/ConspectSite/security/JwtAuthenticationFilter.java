@@ -1,4 +1,4 @@
-package com.devglan.config;
+package com.example.ConspectSite.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
@@ -18,13 +18,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static com.devglan.model.Constants.AUTH0_TOKEN_PREFIX;
-import static com.devglan.model.Constants.HEADER_STRING;
-import static com.devglan.model.Constants.TOKEN_PREFIX;
+import static com.example.ConspectSite.model.Constants.AUTH0_TOKEN_PREFIX;
+import static com.example.ConspectSite.model.Constants.HEADER_STRING;
+import static com.example.ConspectSite.model.Constants.TOKEN_PREFIX;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
     private UserDetailsService userDetailsService;
 
     @Autowired

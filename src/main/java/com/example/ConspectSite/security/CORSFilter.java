@@ -1,4 +1,4 @@
-package com.devglan.config;
+package com.example.ConspectSite.security;
 
 import java.io.IOException;
 

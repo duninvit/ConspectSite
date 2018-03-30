@@ -1,10 +1,10 @@
-package com.devglan.service.impl;
+package com.example.ConspectSite.service.impl;
 
-import com.devglan.dao.UserDao;
-import com.devglan.model.Role;
-import com.devglan.model.User;
-import com.devglan.model.UserDto;
-import com.devglan.service.UserService;
+import com.example.ConspectSite.model.Role;
+import com.example.ConspectSite.model.User;
+import com.example.ConspectSite.model.UserDto;
+import com.example.ConspectSite.repository.UserRepository;
+import com.example.ConspectSite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,13 +22,13 @@ import java.util.List;
 public class UserServiceImpl implements UserDetailsService, UserService {
 	
 	@Autowired
-	private UserDao userDao;
+	private UserRepository userRepository;
 
 	@Autowired
 	private BCryptPasswordEncoder bcryptEncoder;
 
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		User user = userDao.findByUsername(username);
+		User user = userRepository.findByUsername(username);
 		if(user == null){
 			throw new UsernameNotFoundException("Invalid username or password.");
 		}
@@ -41,23 +41,23 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 
 	public List<User> findAll() {
 		List<User> list = new ArrayList<>();
-		userDao.findAll().iterator().forEachRemaining(list::add);
+		userRepository.findAll().iterator().forEachRemaining(list::add);
 		return list;
 	}
 
 	@Override
 	public void delete(long id) {
-		userDao.delete(id);
+		userRepository.deleteById(id);
 	}
 
 	@Override
 	public User findOne(String username) {
-		return userDao.findByUsername(username);
+		return userRepository.findByUsername(username);
 	}
 
 	@Override
 	public User findById(Long id) {
-		return userDao.findOne(id);
+		return userRepository.findById(id).orElse(new User());
 	}
 
 	@Override
@@ -68,6 +68,6 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 		newUser.setAge(user.getAge());
 		newUser.setRole(Role.ROLE_USER);
 		newUser.setSalary(user.getSalary());
-        return userDao.save(newUser);
+        return userRepository.save(newUser);
     }
 }

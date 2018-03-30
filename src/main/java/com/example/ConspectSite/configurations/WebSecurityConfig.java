@@ -1,81 +1,81 @@
-package com.example.ConspectSite.config;
+package com.example.ConspectSite.configurations;
 
-import com.example.ConspectSite.security.auth.*;
-import com.example.ConspectSite.service.impl.CustomUserDetailsService;
+import com.auth0.spring.security.api.JwtAuthenticationEntryPoint;
+import com.auth0.spring.security.api.JwtWebSecurityConfigurer;
+import com.example.ConspectSite.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import javax.annotation.Resource;
 
 @Configuration
+@EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Value("${jwt.cookie}")
-    private String TOKEN_COOKIE;
+    @Value(value = "${auth0.apiAudience}")
+    private String apiAudience;
+    @Value(value = "${auth0.issuer}")
+    private String issuer;
 
-    @Bean
-    public TokenAuthenticationFilter jwtAuthenticationTokenFilter() throws Exception {
-        return new TokenAuthenticationFilter();
-    }
+    @Resource(name = "userService")
+    private UserDetailsService userDetailsService;
 
-    @Bean
+    private JwtAuthenticationEntryPoint unauthorizedHandler;
+
     @Override
+    @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
 
+    @Autowired
+    public void globalUserDetails(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService)
+                .passwordEncoder(encoder());
+    }
+
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public JwtAuthenticationFilter authenticationTokenFilterBean() throws Exception {
+        return new JwtAuthenticationFilter();
     }
-
-    @Autowired
-    private CustomUserDetailsService jwtUserDetailsService;
-
-    @Autowired
-    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
-
-    @Autowired
-    private LogoutSuccess logoutSuccess;
-
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder authenticationManagerBuilder)
-            throws Exception {
-        authenticationManagerBuilder.userDetailsService(jwtUserDetailsService)
-                .passwordEncoder(passwordEncoder());
-
-    }
-
-    @Autowired
-    private AuthenticationSuccessHandler authenticationSuccessHandler;
-
-    @Autowired
-    private AuthenticationFailureHandler authenticationFailureHandler;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().ignoringAntMatchers("/api/login", "/api/signup")
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint).and()
-                .addFilterBefore(jwtAuthenticationTokenFilter(), BasicAuthenticationFilter.class)
-                .authorizeRequests().anyRequest().authenticated().and().formLogin().loginPage("/api/login")
-                .successHandler(authenticationSuccessHandler).failureHandler(authenticationFailureHandler)
-                .and().logout().logoutRequestMatcher(new AntPathRequestMatcher("/api/logout"))
-                .logoutSuccessHandler(logoutSuccess).deleteCookies(TOKEN_COOKIE);
+        JwtWebSecurityConfigurer
+                .forRS256(apiAudience, issuer)
+                .configure(http)
+                .authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/api/public").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/private").authenticated()
+                .antMatchers(HttpMethod.GET, "/api/private-scoped").hasAuthority("read:users");
 
+        http.cors().and().csrf().disable().
+                authorizeRequests()
+                .antMatchers("/token/*", "/signup").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http
+                .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
     }
 
+    @Bean
+    public BCryptPasswordEncoder encoder(){
+        return new BCryptPasswordEncoder();
+    }
 }
