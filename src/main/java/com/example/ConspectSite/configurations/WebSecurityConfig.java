@@ -1,10 +1,10 @@
 package com.example.ConspectSite.configurations;
 
-import com.auth0.spring.security.api.JwtAuthenticationEntryPoint;
-import com.auth0.spring.security.api.JwtWebSecurityConfigurer;
-import com.example.ConspectSite.security.JwtAuthenticationFilter;
+import com.example.ConspectSite.security.JWTAuthenticationFilter;
+import com.example.ConspectSite.security.JWTAuthenticationProvider;
+import com.example.ConspectSite.security.handlers.RestAccessDeniedHandler;
+import com.example.ConspectSite.security.handlers.RestAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,70 +12,70 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import javax.annotation.Resource;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity(debug = true)
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Value(value = "${auth0.apiAudience}")
-    private String apiAudience;
-    @Value(value = "${auth0.issuer}")
-    private String issuer;
+    @Autowired
+    private JWTAuthenticationProvider jwtAuthenticationProvider;
 
-    @Resource(name = "userService")
-    private UserDetailsService userDetailsService;
+    @Autowired
+    @Resource(name = "userAccountDao")
+    private UserDetailsService userAccountDao;
 
-    private JwtAuthenticationEntryPoint unauthorizedHandler;
 
     @Override
+    protected void configure(final HttpSecurity http) throws Exception {
+        http
+                .csrf().disable()
+                .addFilterAfter(new JWTAuthenticationFilter(authenticationManagerBean()), BasicAuthenticationFilter.class)
+                .authorizeRequests()
+                .antMatchers("/**").permitAll()
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(new RestAuthenticationEntryPoint())
+                .accessDeniedHandler(new RestAccessDeniedHandler())
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    }
+
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
 
-    @Autowired
-    public void globalUserDetails(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService)
-                .passwordEncoder(encoder());
-    }
-
-    @Bean
-    public JwtAuthenticationFilter authenticationTokenFilterBean() throws Exception {
-        return new JwtAuthenticationFilter();
+    @Override
+    public void configure(final WebSecurity web) {
+        web.ignoring()
+                .antMatchers("/register/**", "/login/**")
+                .antMatchers("/signin/**", "/signup/**")
+                .antMatchers(HttpMethod.GET, "/register/confirm", "/fanfictions/fresh", "/fanfictions/get/**");
     }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        JwtWebSecurityConfigurer
-                .forRS256(apiAudience, issuer)
-                .configure(http)
-                .authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/api/public").permitAll()
-                .antMatchers(HttpMethod.GET, "/api/private").authenticated()
-                .antMatchers(HttpMethod.GET, "/api/private-scoped").hasAuthority("read:users");
-
-        http.cors().and().csrf().disable().
-                authorizeRequests()
-                .antMatchers("/token/*", "/signup").permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http
-                .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
-    }
-
-    @Bean
-    public BCryptPasswordEncoder encoder(){
-        return new BCryptPasswordEncoder();
+    protected void configure(final AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
+        authenticationManagerBuilder
+                .authenticationProvider(jwtAuthenticationProvider)
+                .userDetailsService(userAccountDao)
+                .passwordEncoder(passwordEncoder());
     }
 }

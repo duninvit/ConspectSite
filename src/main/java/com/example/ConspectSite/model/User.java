@@ -1,5 +1,6 @@
 package com.example.ConspectSite.model;
 
+import com.example.ConspectSite.services.dto.RegisterRequestDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
@@ -9,25 +10,40 @@ public class User {
 
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
-    private long id;
+    private Long id;
     @Column
     private String username;
     @Column
     @JsonIgnore
     private String password;
     @Column
-    private long salary;
-    @Column
-    private int age;
+    private String email;
     @Column
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role userRole;
 
-    public long getId() {
+    private boolean enabled;
+
+    private boolean nonBlocked;
+
+    public User(){
+        this.nonBlocked = true;
+    }
+
+    public User(RegisterRequestDTO registerRequestDTO){
+        this.username = registerRequestDTO.getUsername();
+        this.email = registerRequestDTO.getEmail();
+        this.password = registerRequestDTO.getPassword();
+        userRole = Role.ROLE_USER;
+        enabled = false;
+        nonBlocked = true;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -47,27 +63,39 @@ public class User {
         this.password = password;
     }
 
-    public long getSalary() {
-        return salary;
+    public String getEmail() {
+        return email;
     }
 
-    public void setSalary(long salary) {
-        this.salary = salary;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public int getAge() {
-        return age;
+    public Role getUserRole() {
+        return userRole;
     }
 
-    public void setAge(int age) {
-        this.age = age;
+    public void setUserRole(Role userRole) {
+        this.userRole = userRole;
     }
 
-    public Role getRole() {
-        return role;
+    public void setUserRole(String userRole){
+        this.userRole = Role.valueOf(userRole);
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean isNonBlocked() {
+        return nonBlocked;
+    }
+
+    public void setNonBlocked(boolean nonBlocked) {
+        this.nonBlocked = nonBlocked;
     }
 }

@@ -1,62 +1,63 @@
 package com.example.ConspectSite.controller;
 
-import com.example.ConspectSite.model.User;
-import com.example.ConspectSite.model.UserDto;
-import com.example.ConspectSite.service.UserService;
+import com.example.ConspectSite.services.AuthenticationService;
+import com.example.ConspectSite.services.UserService;
+import com.example.ConspectSite.services.dto.CredentialsUniqueDTO;
+import com.example.ConspectSite.services.dto.UserAccountDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.json.JSONObject;
 
 import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private AuthenticationService authenticationService;
 
-    @RequestMapping(value="/users", method = RequestMethod.GET)
-    /*@PreAuthorize("hasRole('ROLE_ADMIN')")*/
-    public List<User> listUser(){
-        System.out.println(SecurityContextHolder.getContext());
-        return userService.findAll();
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public UserAccountDTO getMe(@RequestParam(value = "email", required = false) String email){
+        if(email == null){
+            return userService.getMe();
+        } else {
+            return userService.getUserByEmail(email);
+        }
     }
 
-    @RequestMapping(value = "/users/{id}", method = RequestMethod.GET)
-    public User getOne(@PathVariable(value = "id") Long id){
-        return userService.findById(id);
+    @PostMapping("/me/update")
+    @ResponseStatus(HttpStatus.OK)
+    public CredentialsUniqueDTO updateUserAccount(@RequestBody UserAccountDTO userAccountDTO){
+        CredentialsUniqueDTO credentialsUniqueDTO = authenticationService.isCredentialsUnique(userAccountDTO);
+        if(credentialsUniqueDTO.isUsernameUnique()) {
+            userService.updateUserAccounts(userAccountDTO);
+        }
+        return credentialsUniqueDTO;
     }
 
-    @RequestMapping(value="/signup", method = RequestMethod.POST)
-    public User saveUser(@RequestBody UserDto user){
-        return userService.save(user);
+    @PostMapping("/update")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateUserAccounts(@RequestBody UserAccountDTO[] users){
+        userService.updateUserAccounts(users);
     }
 
-    @RequestMapping(value = "/api/public", method = RequestMethod.GET, produces = "application/json")
-    @ResponseBody
-    public String publicEndpoint() {
-        return new JSONObject()
-                .put("message", "All good. You DO NOT need to be authenticated to call /api/public.")
-                .toString();
+    @PostMapping("/delete")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteUserAccounts(@RequestBody UserAccountDTO[] users){
+        userService.deleteUserAccounts(users);
     }
 
-    @RequestMapping(value = "/api/private", method = RequestMethod.GET, produces = "application/json")
-    @ResponseBody
-    public String privateEndpoint() {
-        return new JSONObject()
-                .put("message", "All good. You can see this because you are Authenticated.")
-                .toString();
-    }
-
-    @RequestMapping(value = "/api/private-scoped", method = RequestMethod.GET, produces = "application/json")
-    @ResponseBody
-    public String privateScopedEndpoint() {
-        return new JSONObject()
-                .put("message", "All good. You can see this because you are Authenticated with a Token granted the 'read:messages' scope")
-                .toString();
-    }
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    public List<UserAccountDTO> getAll(){
+        return userService.getAllUsers();
+}
 
 }

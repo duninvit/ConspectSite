@@ -1,45 +1,56 @@
 package com.example.ConspectSite.controller;
 
-import com.example.ConspectSite.model.AuthToken;
-import com.example.ConspectSite.model.LoginUser;
+import com.example.ConspectSite.exception.CredentialsNotUniqueException;
+import com.example.ConspectSite.exception.VerificationTokenException;
 import com.example.ConspectSite.model.User;
-import com.example.ConspectSite.security.JwtTokenUtil;
-import com.example.ConspectSite.service.UserService;
+import com.example.ConspectSite.services.AuthenticationService;
+import com.example.ConspectSite.services.UserService;
+import com.example.ConspectSite.services.dto.CredentialsUniqueDTO;
+import com.example.ConspectSite.services.dto.LoginRequestDTO;
+import com.example.ConspectSite.services.dto.LoginResponseDTO;
+import com.example.ConspectSite.services.dto.RegisterRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+
+import javax.validation.Valid;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/token")
 public class AuthenticationController {
 
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+    @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
+    public LoginResponseDTO login(@RequestBody LoginRequestDTO loginRequestDTO){
+        return authenticationService.login(loginRequestDTO);
+    }
 
-    @RequestMapping(value = "/generate-token", method = RequestMethod.POST)
-    public ResponseEntity<?> register(@RequestBody LoginUser loginUser) throws AuthenticationException {
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.OK)
+    public CredentialsUniqueDTO register(@RequestBody @Valid RegisterRequestDTO registerRequestDTO) throws CredentialsNotUniqueException{
+        CredentialsUniqueDTO credentialsUniqueDTO = authenticationService.isCredentialsUnique(registerRequestDTO);
+        if(credentialsUniqueDTO.isCredentialsUnique()) {
+            User user = userService.createUserAccount(registerRequestDTO);
+            authenticationService.sendConfirmationMail(user);
+        }
+        return credentialsUniqueDTO;
+    }
 
-        final Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginUser.getUsername(),
-                        loginUser.getPassword()
-                )
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        final User user = userService.findOne(loginUser.getUsername());
-        final String token = jwtTokenUtil.generateToken(user);
-        return ResponseEntity.ok(new AuthToken(token));
+    @GetMapping("/register/confirm")
+    public RedirectView confirmRegistration(@RequestParam("token") String token) throws VerificationTokenException{
+        authenticationService.confirmUserAccount(token);
+        return new RedirectView("http://localhost:4200");
+    }
+
+    @PostMapping("/isCredentialsUnique")
+    public CredentialsUniqueDTO isCredentialsUnique(@RequestBody RegisterRequestDTO registerRequestDTO){
+        return authenticationService.isCredentialsUnique(registerRequestDTO);
     }
 }

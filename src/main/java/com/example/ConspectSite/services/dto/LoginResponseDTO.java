@@ -1,14 +1,9 @@
-package com.example.ConspectSite.model;
+package com.example.ConspectSite.services.dto;
 
-public class AuthToken {
-
+public class LoginResponseDTO {
     private String token;
 
-    public AuthToken(){
-
-    }
-
-    public AuthToken(String token){
+    public LoginResponseDTO(String token) {
         this.token = token;
     }
 
@@ -19,5 +14,4 @@ public class AuthToken {
     public void setToken(String token) {
         this.token = token;
     }
-
 }
