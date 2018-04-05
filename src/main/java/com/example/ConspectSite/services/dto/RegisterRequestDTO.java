@@ -6,14 +6,14 @@ import javax.validation.constraints.NotNull;
 
 public class RegisterRequestDTO extends UserAccountDTO {
 
+    @NotNull
+    @NotEmpty
+    private String username;
+
     @Email
     @NotNull
     @NotEmpty
     private String email;
-
-    @NotNull
-    @NotEmpty
-    private String username;
 
     @NotNull
     @NotEmpty

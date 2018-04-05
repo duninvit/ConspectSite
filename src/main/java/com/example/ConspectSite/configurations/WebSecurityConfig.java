@@ -68,7 +68,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring()
                 .antMatchers("/register/**", "/login/**")
                 .antMatchers("/signin/**", "/signup/**")
-                .antMatchers(HttpMethod.GET, "/register/confirm", "/fanfictions/fresh", "/fanfictions/get/**");
+                .antMatchers(HttpMethod.GET, "/register/confirm", "/conspects/fresh", "/conspects/get/**");
     }
 
     @Override
