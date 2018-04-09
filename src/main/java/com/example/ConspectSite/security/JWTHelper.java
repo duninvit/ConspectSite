@@ -10,8 +10,10 @@ import com.example.ConspectSite.exception.InvalidTokenAuthenticationException;
 import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.HashMap;
 
+import static com.example.ConspectSite.model.Constants.ACCESS_TOKEN_VALIDITY_SECONDS;
 import static com.example.ConspectSite.model.Constants.SIGNING_KEY;
 
 @Component
@@ -26,6 +28,7 @@ public class JWTHelper {
             token = JWT.create()
                     .withIssuer("auth0")
                     .withClaim(USER_ID_CLAIM, userId)
+                    .withClaim("expires_at", new Date(System.currentTimeMillis() + ACCESS_TOKEN_VALIDITY_SECONDS*1000))
                     .sign(algorithm);
         } catch (UnsupportedEncodingException exception){
             System.out.println(exception.getMessage());

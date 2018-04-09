@@ -22,7 +22,7 @@ public class RatingsService {
     @Autowired
     private UserService userService;
 
-    public ConspectRatingDTO getConspectRating(Long conspectId){
+    public ConspectRatingDTO getConspectRating(Long conspectId) {
         ConspectRatingDTO conspectRatingDTO = new ConspectRatingDTO();
         Double averageRate = averageRating(conspectId);
         conspectRatingDTO.setAverageRate(averageRate.floatValue());
@@ -31,8 +31,7 @@ public class RatingsService {
             Integer myRate = 0;
             try {
                 myRate = ratingRepository.getRatingByUserIdAndConspectId(user.getId(), conspectId).getRate();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 myRate = 0;
             }
             conspectRatingDTO.setMyRate(myRate);
@@ -40,7 +39,7 @@ public class RatingsService {
         return conspectRatingDTO;
     }
 
-    private double averageRating(Long conspectId){
+    private double averageRating(Long conspectId) {
         List<Rating> ratings = ratingRepository.findAllByConspectId(conspectId);
         double totalRate = 0;
         for (Rating rate : ratings) {
@@ -49,15 +48,16 @@ public class RatingsService {
         return totalRate / ratingRepository.countAllByConspectId(conspectId);
     }
 
-    public void addRatingToConspect(Long conspectId, RatingDTO rating){
+    public void addRatingToConspect(Long conspectId, ConspectRatingDTO rating) {
         Conspect conspect = conspectRepository.findById(conspectId).orElse(new Conspect());
         User user = userService.findUser(null);
-        if(ratingRepository.getRatingByUserIdAndConspectId(user.getId(), conspectId) == null) {
-            Rating newRate = new Rating(rating.getRate(), user, conspect);
-            ratingRepository.save(newRate);
-            conspect.getRates().add(newRate);
-            conspectRepository.save(conspect);
+        if (ratingRepository.getRatingByUserIdAndConspectId(user.getId(), conspectId) != null) {
+            ratingRepository.delete(ratingRepository.getRatingByUserIdAndConspectId(user.getId(), conspectId));
         }
+        Rating newRate = new Rating(rating.getMyRate(), user, conspect);
+        ratingRepository.save(newRate);
+        conspect.getRates().add(newRate);
+        conspectRepository.save(conspect);
     }
 
 }

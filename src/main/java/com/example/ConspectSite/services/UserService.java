@@ -35,8 +35,8 @@ public class UserService {
         return new UserAccountDTO(user);
     }
 
-    public UserAccountDTO getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email);
+    public UserAccountDTO getUserById(String id) {
+        User user = userRepository.findById(Long.parseLong(id)).orElse(new User());
         return new LoginRequestDTO(user);
     }
 
@@ -53,14 +53,12 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUserAccounts(UserAccountDTO... users) {
-        for (UserAccountDTO u : users) {
-            User user = userRepository.findByEmail(u.getEmail());
-            Optional.ofNullable(u.getUsername()).ifPresent(user::setUsername);
-            Optional.ofNullable(u.getRole()).ifPresent(user::setUserRole);
-            user.setNonBlocked(!u.isBlocked());
-            userRepository.save(user);
-        }
+    public void updateUserAccount(UserAccountDTO userAccountDTO) {
+        User user = userRepository.findByEmail(userAccountDTO.getEmail());
+        Optional.ofNullable(userAccountDTO.getUsername()).ifPresent(user::setUsername);
+        Optional.ofNullable(userAccountDTO.getRole()).ifPresent(user::setUserRole);
+        user.setNonBlocked(!userAccountDTO.isBlocked());
+        userRepository.save(user);
     }
 
     public List<UserAccountDTO> getAllUsers() {
@@ -71,11 +69,9 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUserAccounts(UserAccountDTO... users) {
-        for (UserAccountDTO u : users) {
-            User user = userRepository.findByEmail(u.getEmail());
-            userRepository.delete(user);
-        }
+    public void deleteUserAccount(UserAccountDTO userAccountDTO) {
+        User user = userRepository.findByUsername(userAccountDTO.getUsername());
+        userRepository.delete(user);
     }
 
     User findUser(String email) {

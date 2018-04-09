@@ -21,6 +21,8 @@ import static com.example.ConspectSite.model.Constants.HEADER_STRING;
 
 public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
+    private final String AUTHENTICATION_HEADER = "Authorization";
+
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
         super(request -> true);
         setAuthenticationManager(authenticationManager);
@@ -30,7 +32,7 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
         try{
-            String token = Optional.ofNullable(request.getHeader(HEADER_STRING)).orElse(null);
+            String token = Optional.ofNullable(request.getHeader(AUTHENTICATION_HEADER)).orElse(null);
             if(token == null)
                 throw new BadCredentialsException("Token not found in request's header.");
             JWTAuthentication authRequest = new JWTAuthentication(token);

@@ -24,7 +24,7 @@ public class RatingController {
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.OK)
     public void addConspectRating(@RequestParam("conspectId") Long conspectId,
-                                 @RequestBody RatingDTO rating){
+                                 @RequestBody ConspectRatingDTO rating){
         ratingsService.addRatingToConspect(conspectId, rating);
     }
 

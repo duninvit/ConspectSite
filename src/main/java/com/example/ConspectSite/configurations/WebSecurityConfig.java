@@ -38,7 +38,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
-        http
+        http.cors().and()
                 .csrf().disable()
                 .addFilterAfter(new JWTAuthenticationFilter(authenticationManagerBean()), BasicAuthenticationFilter.class)
                 .authorizeRequests()
@@ -68,7 +68,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring()
                 .antMatchers("/register/**", "/login/**")
                 .antMatchers("/signin/**", "/signup/**")
-                .antMatchers(HttpMethod.GET, "/register/confirm", "/conspects/fresh", "/conspects/get/**");
+                .antMatchers(HttpMethod.GET, "/register/confirm", "/conspects/fresh", "/conspects/get/**", "/conspects/tags");
     }
 
     @Override

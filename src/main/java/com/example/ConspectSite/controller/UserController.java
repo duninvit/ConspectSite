@@ -23,34 +23,45 @@ public class UserController {
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public UserAccountDTO getMe(@RequestParam(value = "email", required = false) String email){
-        if(email == null){
+    public UserAccountDTO getMe(@RequestParam(value = "id", required = false) String id){
+        if(id == null){
             return userService.getMe();
         } else {
-            return userService.getUserByEmail(email);
+            return userService.getUserById(id);
         }
     }
 
-    @PostMapping("/me/update")
+    @GetMapping("/user")
     @ResponseStatus(HttpStatus.OK)
-    public CredentialsUniqueDTO updateUserAccount(@RequestBody UserAccountDTO userAccountDTO){
-        CredentialsUniqueDTO credentialsUniqueDTO = authenticationService.isCredentialsUnique(userAccountDTO);
-        if(credentialsUniqueDTO.isUsernameUnique()) {
-            userService.updateUserAccounts(userAccountDTO);
+    public UserAccountDTO getUser(@RequestParam(value = "id", required = false) String id){
+        if(id == null){
+            return userService.getMe();
+        } else {
+            return userService.getUserById(id);
         }
-        return credentialsUniqueDTO;
     }
 
     @PostMapping("/update")
     @ResponseStatus(HttpStatus.OK)
-    public void updateUserAccounts(@RequestBody UserAccountDTO[] users){
-        userService.updateUserAccounts(users);
+    public void updateUserAccount(@RequestBody UserAccountDTO user){
+        userService.updateUserAccount(user);
+    }
+
+
+    @PostMapping("/me/update")
+    @ResponseStatus(HttpStatus.OK)
+    public CredentialsUniqueDTO updateMyAccount(@RequestBody UserAccountDTO userAccountDTO){
+        CredentialsUniqueDTO credentialsUniqueDTO = authenticationService.isCredentialsUnique(userAccountDTO);
+        if(credentialsUniqueDTO.isUsernameUnique()) {
+            userService.updateUserAccount(userAccountDTO);
+        }
+        return credentialsUniqueDTO;
     }
 
     @PostMapping("/delete")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteUserAccounts(@RequestBody UserAccountDTO[] users){
-        userService.deleteUserAccounts(users);
+    public void deleteUserAccounts(@RequestBody UserAccountDTO user){
+        userService.deleteUserAccount(user);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

@@ -45,6 +45,16 @@ public class ConspectService {
         return new ConspectResponseDTO(conspectRepository.findAll()).getConspects();
     }
 
+    public List<ConspectDTO> getConspects(long id){
+        return new ConspectResponseDTO(conspectRepository.findAllByUserId(id)).getConspects();
+    }
+
+    public List<ConspectDTO> getConspectsByTag(String tag){
+        Tag _tag = new Tag();
+        _tag.setTag(tag);
+        return new ConspectResponseDTO(conspectRepository.findAllByTags(_tag)).getConspects();
+    }
+
     public ConspectDTO getConspect(Long conspectId, String userEmail){
         ConspectDTO conspectDTO = null;
         Conspect conspect = conspectRepository.findById(conspectId).orElse(new Conspect());
@@ -60,11 +70,12 @@ public class ConspectService {
     }
 
     @Transactional
-    public void createConspect(String email, ConspectRequestDTO conspectRequestDTO){
+    public Long createConspect(String email, ConspectRequestDTO conspectRequestDTO){
         User user = userService.findUser(email);
         Conspect conspect = new Conspect(conspectRequestDTO, user);
         conspect.setTags(getTags(conspectRequestDTO.getTags()));
         conspectRepository.save(conspect);
+        return conspect.getId();
     }
 
     @Transactional

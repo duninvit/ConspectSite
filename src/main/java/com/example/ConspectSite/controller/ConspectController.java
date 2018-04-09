@@ -36,11 +36,23 @@ public class ConspectController {
         return conspectService.getFreshConspects();
     }
 
+    @GetMapping("/gets")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ConspectDTO> getConspects(@RequestParam(value = "id") String id){
+        return conspectService.getConspects(Long.parseLong(id));
+    }
+
+    @GetMapping("/getbytag")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ConspectDTO> getConspectsByTag(@RequestParam(value = "tag") String tag){
+        return conspectService.getConspectsByTag(tag);
+    }
+
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.OK)
-    public void createConspect(@RequestParam(value = "email", required = false) String email,
+    public Long createConspect(@RequestParam(value = "email", required = false) String email,
                                  @RequestBody ConspectRequestDTO conspectRequestDTO){
-        conspectService.createConspect(email, conspectRequestDTO);
+        return conspectService.createConspect(email, conspectRequestDTO);
     }
 
     @PostMapping("/update")
@@ -49,17 +61,17 @@ public class ConspectController {
         conspectService.updateConspect(conspectDTO);
     }
 
-    @GetMapping("/get/{fanfictionId}")
+    @GetMapping("/get/{conspectId}")
     @ResponseStatus(HttpStatus.OK)
-    public ConspectDTO getConspect(@PathVariable Long fanfictionId,
+    public ConspectDTO getConspect(@PathVariable Long conspectId,
                                      @RequestParam(value = "email", required = false) String userEmail){
-        return conspectService.getConspect(fanfictionId, userEmail);
+        return conspectService.getConspect(conspectId, userEmail);
     }
 
-    @PostMapping("/delete/{fanfictionId}")
+    @PostMapping("/delete/{conspectId}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteConspect (@PathVariable Long fanfictionId){
-        conspectService.deleteConspect(fanfictionId);
+    public void deleteConspect (@PathVariable Long conspectId){
+        conspectService.deleteConspect(conspectId);
     }
 
     @GetMapping("/tags")

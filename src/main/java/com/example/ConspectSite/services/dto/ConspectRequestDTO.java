@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 public class ConspectRequestDTO {
 
-    private String author;
     private String title;
     private String description;
     private String numberSpec;
@@ -28,12 +27,10 @@ public class ConspectRequestDTO {
         tags = conspect.getTags().stream()
                 .map(Tag::getTag)
                 .collect(Collectors.toList());
-        author = conspect.getUser().getUsername();
         mainText = conspect.getMainText();
     }
 
     public ConspectRequestDTO(String author, String title, String description, String numberSpec, String creationDate, String mainText, List<String> tags) {
-        this.author = author;
         this.title = title;
         this.description = description;
         this.numberSpec = numberSpec;
@@ -48,14 +45,6 @@ public class ConspectRequestDTO {
 
     public void setMainText(String mainText) {
         this.mainText = mainText;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
     }
 
     public String getTitle() {
